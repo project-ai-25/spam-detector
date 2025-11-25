@@ -386,11 +386,14 @@ document.addEventListener("click", function(e) {
   const insidePanel = panel.contains(e.target);
   const onNav = [...buttons].some(b => b.contains(e.target));
   const onAction = actionBtn.contains(e.target);
+  const insidePanelContent = panelContent.contains(e.target);
+  const clickedMemberLink = e.target.classList.contains("memberLink");
 
-  if (!insidePanel && !onNav && !onAction) {
+  if (!insidePanel && !insidePanelContent && !onNav && !onAction && !clickedMemberLink) {
     panel.style.maxHeight = "0px";
   }
 });
+
 
 /* Hide spamDiv when clicking nav buttons */
 buttons.forEach(btn => {
