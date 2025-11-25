@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Spam Detector & Chat Bot</title>
+
+  <style>
+/* -----------------------------------
+   BODY + BACKGROUND
+----------------------------------- */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+  background: url('https://images.unsplash.com/photo-1519389950473-47ba0277781c?auto=format&fit=crop&w=1950&q=80')
+              no-repeat center center fixed;
+  background-size: cover;
+}
+
+/* -----------------------------------
+   FIXED HEADER
+----------------------------------- */
+header {
+  position: fixed;
+  top: 0;
+  width: 100%;
+  background: rgba(0,0,0,0.85);
+  color: white;
+  padding: 15px 20px;
+  z-index: 1000;
+}
+
+header h2 {
+  margin: 0 0 10px 0;
+  font-weight: 600;
+}
+
+/* -----------------------------------
+   NAV PILLS
+----------------------------------- */
+.pill-nav a {
+  display: inline-block;
+  padding: 10px 18px;
+  border-radius: 40px;
+  margin-right: 10px;
+  text-decoration: none;
+  background: #ddd;
+  color: black;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.pill-nav a.active {
+  background-color: #457b9d;
+  color: white;
+}
+
+.pill-nav a i {
+  margin-right: 5px;
+  vertical-align: middle;
+}
+
+/* -----------------------------------
+   SLIDE PANEL
+----------------------------------- */
+#slidePanel {
+  max-height: 0;
+  overflow: hidden;
+  background: #ffffffeb;
+  margin: 90px auto 0;
+  width: 85%;
+  padding: 0 20px;
+  border-radius: 8px;
+  transition: max-height 0.5s ease;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+/* -----------------------------------
+   SPAM DETECTOR BOX
+----------------------------------- */
+.container {
+  background: rgba(255,255,255,0.92);
+  padding: 2rem 3rem;
+  border-radius: 12px;
+  width: 400px;
+  margin: 160px auto 60px;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+}
+
+textarea {
+  width: 100%;
+  height: 150px;
+  padding: 10px;
+}
+
+button {
+  padding: 10px 20px;
+  background: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+.spam { color: #e63946; }
+.not-spam { color: #2a9d8f; }
+
+/* -----------------------------------
+   TEAM LIST
+----------------------------------- */
+.memberList {
+  list-style: disc;
+  padding-left: 20px;
+}
+
+.memberList li { margin-bottom: 10px; }
+.memberList a {
+  text-decoration: none;
+  color: darkmagenta;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.memberList a:hover { color: #e63946; }
+
+/* -----------------------------------
+   CHAT BOT
+----------------------------------- */
+#chat-window {
+  height: 250px;
+  overflow-y: auto;
+  border: 1px solid #ccc;
+  padding: 10px;
+  margin-bottom: 10px;
+  border-radius: 5px;
+  background: #f8f8f8;
+}
+
+.chat-message {
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  border-radius: 12px;
+  max-width: 80%;
+}
+
+.user-msg {
+  background-color: #007bff;
+  color: white;
+  margin-left: auto;
+  text-align: right;
+}
+
+.bot-msg {
+  background-color: #e6e6e6;
+  color: #333;
+  text-align: left;
+}
+
+  </style>
+</head>
+<body>
+
+<header>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+  <h2><i class="fas fa-shield-alt"></i> Spam Detector</h2>
+
+  <div class="pill-nav">
+    <a class="navBtn active" data-content="intro">Introduction</a>
+    <a class="navBtn" data-content="news" style="background:#2a9d8f;">Team Members</a>
+    <a class="navBtn" data-content="contact" style="background:#007bff;">Contact Us</a>
+    <a class="navBtn" data-content="chatbot" style="background:#e63946;">Chat Bot <i class="fas fa-robot"></i></a>
+    <a id="showBtn" style="background:goldenrod;">Action <i class="fas fa-play text-white"></i></a>
+    <a class="navBtn" data-content="search" style="background:blueviolet;">Search <i class="fas fa-search"></i></a>
+  </div>
+</header>
+
+<div id="slidePanel" class="boardered">
+  <div id="panelContent" style="padding:20px;"></div>
+</div>
+
+<div class="container" id="spamDiv" style="display:none;">
+  <h1 style="text-align:center;">Email Spam Detector</h1>
+  <textarea id="messageInput" placeholder="Enter the email ..."></textarea>
+  <div style="text-align:center;">
+    <button onclick="checkSpam()">Check Email for Spam</button>
+  </div>
+  <div id="result"></div>
+</div>
+
+<script>
+/* -----------------------------------
+   SPAM DETECTOR
+----------------------------------- */
+function checkSpam() {
+  const text = document.getElementById("messageInput").value.toLowerCase();
+  const resultDiv = document.getElementById("result");
+
+  const spamWords = ["lottery", "prize", "winner", "money", "click here", "free", "urgent", "congratulations", "guaranteed", "offer", "discount", "investment", "cash", "unsubscribe", "income"];
+  
+  const messageText = document.getElementById("messageInput").value;
+  const excessiveCaps = /[A-Z]{3,}/.test(messageText);
+  const suspiciousLink = /http[s]?:\/\/[^\s]+/i.test(text);
+  
+  const foundWord = spamWords.some(word => text.includes(word));
+  
+  if (text.trim() === "") {
+    resultDiv.textContent = "Please enter an email message.";
+    resultDiv.className = "";
+  } else if (foundWord || excessiveCaps || suspiciousLink) {
+    resultDiv.textContent = "⚠️ This email looks like SPAM!";
+    resultDiv.className = "spam";
+    
+    if (excessiveCaps) resultDiv.textContent += " (Reason: Excessive CAPITALIZATION)";
+    else if (suspiciousLink) resultDiv.textContent += " (Reason: Suspicious LINK)";
+    else if (foundWord) resultDiv.textContent += " (Reason: Keyword match)";
+    
+  } else {
+    resultDiv.textContent = "✅ This email looks safe.";
+    resultDiv.className = "not-spam";
+  }
+}
+
+/* -----------------------------------
+   CHAT BOT
+----------------------------------- */
+function addMessage(sender, text) {
+  const chatWindow = document.getElementById("chat-window");
+  const msgDiv = document.createElement('div');
+  msgDiv.className = `chat-message ${sender}-msg`;
+  msgDiv.textContent = text;
+  chatWindow.appendChild(msgDiv);
+  chatWindow.scrollTop = chatWindow.scrollHeight;
+}
+
+function chatBotResponse(userMsg) {
+  const msg = userMsg.toLowerCase();
+  let response = "I'm a simple bot. Ask for **tips**, **false positives**, or **expand word list**!";
+
+  if (msg.includes("tip")) {
+    response = "Tip: Use regex to detect patterns like ALL CAPS, links, and repeated punctuation!";
+  } else if (msg.includes("false")) {
+    response = "False positives happen when legit emails contain spam-like words. Use a scoring system!";
+  } else if (msg.includes("expand")) {
+    response = "Add words like 'guaranteed', 'limited offer', 'unsubscribe', and 'cash reward'.";
+  } else if (msg.includes("hi") || msg.includes("hello")) {
+    response = "Hello! Ask me about spam detection!";
+  }
+
+  setTimeout(() => addMessage("bot", response), 500);
+}
+
+function sendChat() {
+  const chatInput = document.getElementById("chatInput");
+  const text = chatInput.value.trim();
+  if (!text) return;
+
+  addMessage("user", text);
+  chatBotResponse(text);
+  chatInput.value = "";
+}
+
+/* -----------------------------------
+   SLIDE PANEL CONTENT
+----------------------------------- */
+const content = {
+  intro: `<h2 style="color:#457b9d;">Introduction</h2><p>A spam detector analyzes incoming messages to separate spam from safe content using keywords, patterns, and suspicious behavior.</p>`,
+
+  news: `
+    <h2 style="color:#2a9d8f;">Team Members</h2>
+    <ul class="memberList">
+      <li><a class='memberLink' data-member='niranjana'>Niranjana Anish</a></li>
+      <li><a class='memberLink' data-member='angel'>Angelin Sara Reji</a></li>
+      <li><a class='memberLink' data-member='pornami'>Pournami V</a></li>
+      <li><a class='memberLink' data-member='sreelekshmi'>Sreelekshmi P A</a></li>
+      <li><a class='memberLink' data-member='sreekanth'>Sreekanth O</a></li>
+    </ul>`,
+
+  contact: `<h2 style="color:#007bff;">Contact Us</h2><p>Email: niranjanaanish930@gmail.com</p>`,
+
+  search: `
+    <h2 style="color:blueviolet;">Search</h2>
+    <input id="searchInput" type="text" placeholder="Enter text to search..." style="width:90%;padding:10px;border-radius:6px;margin-bottom:10px;">
+    <button onclick="performSearch()" style="padding:8px 14px;background:#5a189a;color:white;border-radius:5px;">Search</button>
+    <p id="searchResult" style="font-weight:bold;"></p>`,
+
+  chatbot: `
+    <h2 style="color:#e63946;"><i class="fas fa-robot"></i> Chat Bot</h2>
+    <div id="chat-window">
+      <div class="chat-message bot-msg">Hello! Ask me for spam detection tips.</div>
+    </div>
+    <div style="display:flex; gap:10px; margin-top:10px;">
+      <input type="text" id="chatInput" placeholder="Ask me..." onkeydown="if(event.key === 'Enter') sendChat()" style="flex-grow:1; padding:10px; border-radius:5px;">
+      <button onclick="sendChat()" style="background:#e63946;color:white;border-radius:5px;">Send</button>
+    </div>`
+};
+
+const panel = document.getElementById("slidePanel");
+const panelContent = document.getElementById("panelContent");
+const buttons = document.querySelectorAll(".navBtn");
+
+/* -----------------------------------
+   NAV BUTTON HANDLER
+----------------------------------- */
+buttons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    buttons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    panelContent.innerHTML = content[btn.dataset.content];
+    panel.style.maxHeight = "500px";
+
+    if (btn.dataset.content === 'chatbot') {
+      setTimeout(() => {
+        const chatWindow = document.getElementById("chat-window");
+        chatWindow.scrollTop = chatWindow.scrollHeight;
+      }, 50);
+    }
+  });
+});
+
+/* -----------------------------------
+   MEMBER DETAILS
+----------------------------------- */
+const memberDetails = {
+  niranjana: "<h2>Niranjana – Leader</h2><p>Manages work, checks progress, resolves doubts.</p>",
+  angel: "<h2>Angel – Researcher</h2><p>Collects questions and prepares report.</p>",
+  pornami: "<h2>Pournami – Data Expert</h2><p>Collects and prepares data for training.</p>",
+  sreelekshmi: "<h2>Sreelekshmi – Designer</h2><p>Designs the prototype layout and flow.</p>",
+  sreekanth: "<h2>Sreekanth – Tester</h2><p>Tests model accuracy and gathers feedback.</p>"
+};
+
+document.addEventListener("click", e => {
+  if (e.target.classList.contains("memberLink")) {
+    panelContent.innerHTML = memberDetails[e.target.dataset.member];
+    panel.style.maxHeight = "500px";
+  }
+});
+
+/* -----------------------------------
+   SEARCH
+----------------------------------- */
+function performSearch() {
+  const term = document.getElementById("searchInput").value.toLowerCase();
+  const output = document.getElementById("searchResult");
+
+  if (!term.trim()) {
+    output.textContent = "Please enter a word to search.";
+    output.style.color = "red";
+    return;
+  }
+
+  const bodyText = document.body.innerText.toLowerCase();
+  if (bodyText.includes(term)) {
+    output.textContent = `Result found: "${term}" exists on this page.`;
+    output.style.color = "green";
+  } else {
+    output.textContent = `No results found for "${term}".`;
+    output.style.color = "red";
+  }
+}
+
+/* -----------------------------------
+   ACTION BUTTON (Show spam detector)
+----------------------------------- */
+const spamDiv = document.getElementById("spamDiv");
+const actionBtn = document.getElementById("showBtn");
+
+actionBtn.addEventListener("click", function () {
+  spamDiv.style.display = "block";
+
+  buttons.forEach(b => b.classList.remove("active"));
+  this.classList.add("active");
+
+  panel.style.maxHeight = "0px";
+
+  document.getElementById("messageInput").value = "";
+  document.getElementById("result").textContent = "";
+});
+
+/* -----------------------------------
+   CLOSE PANEL WHEN CLICK OUTSIDE
+----------------------------------- */
+document.addEventListener("click", function(e) {
+  const insidePanel = panel.contains(e.target);
+  const onNav = [...buttons].some(b => b.contains(e.target));
+  const onAction = actionBtn.contains(e.target);
+
+  if (!insidePanel && !onNav && !onAction) {
+    panel.style.maxHeight = "0px";
+  }
+});
+
+/* Hide spamDiv when clicking nav buttons */
+buttons.forEach(btn => {
+  btn.addEventListener("click", function () {
+    if (btn.id !== "showBtn") {
+      spamDiv.style.display = "none";
+    }
+  });
+});
+
+</script>
+
+</body>
+</html>
