@@ -157,8 +157,154 @@ button {
   text-align: left;
 }
 
+
+/* Floating Chat Button */
+#floatingChatBtn {
+  position: fixed;
+  bottom: 25px;
+  right: 25px;
+  width: 60px;
+  height: 60px;
+  background: #1E90FF;
+  border-radius: 50%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+  z-index: 2000;
+  transition: 0.3s ease;
+}
+
+#floatingChatBtn i {
+  color: white;
+  font-size: 30px;
+}
+
+#floatingChatBtn:hover {
+  transform: scale(1.12);
+}
+
+/* Chat Window */
+#chatBox {
+  position: fixed;
+  bottom: 95px;
+  right: 25px;
+  width: 320px;
+  height: 380px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  display: none; /* Hidden initially */
+  flex-direction: column;
+  z-index: 2500;
+}
+
+.chatHeader {
+  background: #1E90FF;
+  color: white;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: bold;
+  border-radius: 12px 12px 0 0;
+  text-align: center;
+}
+
+#chatMessages {
+  flex-grow: 1;
+  padding: 10px;
+  overflow-y: auto;
+  background: #f8f9fa;
+}
+
+/* Chat Messages */
+.message {
+  padding: 8px 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  max-width: 75%;
+  font-size: 14px;
+}
+
+.userMsg {
+  background: #007bff;
+  color: white;
+  margin-left: auto;
+}
+
+.botMsg {
+  background: #e9ecef;
+  color: black;
+}
+
+/* Input box */
+.chatInputArea {
+  display: flex;
+  padding: 8px;
+  gap: 5px;
+}
+
+#chatTextInput {
+  flex-grow: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+#chatSendBtn {
+  background: #1E90FF;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+#chatCloseBtn {
+  float: right;
+  margin-right: 10px;
+  font-size: 22px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+#chatCloseBtn:hover {
+  color: #000;
+}
+
+
   </style>
 </head>
+<div id="floatingChatBtn">
+    <i class="fas fa-comment-dots"></i>
+</div>
+<!-- Chat Window Box -->
+<div id="chatBox">
+    <div class="chatHeader">
+        Chat Bot
+        <span id="chatCloseBtn">&times;</span>
+    </div>
+
+    <div id="chatMessages"></div>
+
+    <div class="chatInputArea">
+        <input type="text" id="chatTextInput" placeholder="Type a message..." />
+        <button id="chatSendBtn">Send</button>
+    </div>
+</div>
+
+
+<!-- Chat Window Box -->
+<div id="chatBox">
+    <div class="chatHeader">Chat Bot</div>
+
+    <div id="chatMessages"></div>
+
+    <div class="chatInputArea">
+        <input type="text" id="chatTextInput" placeholder="Type a message..." />
+        <button id="chatSendBtn">Send</button>
+    </div>
+</div>
+
 <body>
 
 <header>
@@ -170,7 +316,9 @@ button {
     <a class="navBtn active" data-content="intro">Introduction</a>
     <a class="navBtn" data-content="news" style="background:#2a9d8f;">Team Members</a>
     <a class="navBtn" data-content="contact" style="background:#007bff;">Contact Us</a>
-    <a class="navBtn" data-content="chatbot" style="background:#e63946;">Chat Bot <i class="fas fa-robot"></i></a>
+    <a class="navBtn" data-content="chatbot" style="background:#e63946; display: none;">Chat Bot <i class="fas fa-robot"></i></a>
+    
+    
     <a id="showBtn" style="background:goldenrod;">Action <i class="fas fa-play text-white"></i></a>
     <a class="navBtn" data-content="search" style="background:blueviolet;">Search <i class="fas fa-search"></i></a>
   </div>
@@ -296,6 +444,8 @@ const content = {
     </div>`
 };
 
+
+
 const panel = document.getElementById("slidePanel");
 const panelContent = document.getElementById("panelContent");
 const buttons = document.querySelectorAll(".navBtn");
@@ -402,6 +552,63 @@ buttons.forEach(btn => {
       spamDiv.style.display = "none";
     }
   });
+});
+
+
+
+// Show / Hide Chat Window
+const chatBtn = document.getElementById("floatingChatBtn");
+const chatBox = document.getElementById("chatBox");
+const chatMessages = document.getElementById("chatMessages");
+const chatInput = document.getElementById("chatTextInput");
+const sendBtn = document.getElementById("chatSendBtn");
+
+chatBtn.addEventListener("click", () => {
+    chatBox.style.display = (chatBox.style.display === "flex") ? "none" : "flex";
+});
+
+// Add Message
+function addMsg(text, sender) {
+    const div = document.createElement("div");
+    div.className = "message " + (sender === "user" ? "userMsg" : "botMsg");
+    div.textContent = text;
+    chatMessages.appendChild(div);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+// Bot Logic
+function botReply(userText) {
+    let reply = "I am your chat bot! Ask me anything about spam detection.";
+
+    if (userText.includes("tip")) reply = "Tip: Check for ALL CAPS, links, and spam keywords.";
+    else if (userText.includes("spam")) reply = "Spam emails often contain prizes, offers, and suspicious links.";
+    else if (userText.includes("hello")) reply = "Hello! How can I assist you?";
+    
+    setTimeout(() => addMsg(reply, "bot"), 400);
+}
+
+// Send Button
+sendBtn.addEventListener("click", () => {
+    const text = chatInput.value.trim();
+    if (!text) return;
+
+    addMsg(text, "user");
+    botReply(text);
+
+    chatInput.value = "";
+});
+
+// Allow Enter key to send
+chatInput.addEventListener("keydown", (e) => {
+    if (e.key === "Enter") sendBtn.click();
+});
+
+
+
+
+// Close chat window
+document.getElementById("chatCloseBtn").addEventListener("click", () => {
+    chatBox.style.display = "none";
 });
 
 </script>
